@@ -4,6 +4,7 @@ use std::hashmap::HashMap;
 use std::fmt::{Show, Formatter};
 use std::fmt;
 
+#[deriving(Eq)]
 enum Cell {
     Nil,
     X,
@@ -73,6 +74,68 @@ impl Game {
         println!("{}\n{}\n{}", self.state[0], self.state[1], self.state[2]);
     }
 
+    fn is_won(&self) -> bool {
+        for i in range(1u, 4u) {
+            if self.get(i, 1u) == self.get(i, 2u)
+            && self.get(i, 2u) == self.get(i, 3u)
+            && self.get(i, 1u) == self.get(i, 3u) {
+                match self.get(i, 1u) {
+                    Ok(X) => return true,
+                    Ok(O) => return true,
+                    _ => (),
+                }
+            }
+        }
+
+        for i in range(1u, 4u) {
+            if self.get(1u, i) == self.get(2u, i)
+            && self.get(2u, i) == self.get(3u, i)
+            && self.get(1u, i) == self.get(3u, i) {
+                match self.get(1u, i) {
+                    Ok(X) => return true,
+                    Ok(O) => return true,
+                    _ => (),
+                }
+            }
+        }
+
+        if self.get(1u, 1u) == self.get(2u, 2u)
+        && self.get(2u, 2u) == self.get(3u, 3u) {
+            match self.get(1u, 1u) {
+                Ok(X) => return true,
+                Ok(O) => return true,
+                _ => (),
+            }
+        }
+
+        if self.get(1u, 3u) == self.get(2u, 2u)
+        && self.get(2u, 2u) == self.get(3u, 1u) {
+            match self.get(1u, 3u) {
+                Ok(X) => return true,
+                Ok(O) => return true,
+                _ => (),
+            }
+        }
+
+        false
+    }
+
+    fn is_over(&self) -> bool {
+        if self.is_won() {
+            return true;
+        }
+
+        for i in range(1u, 4u) {
+            for j in range(1u, 4u) {
+                if self.cell_is_avail(i, j) {
+                    return false;
+                }
+            }
+
+        }
+
+        true
+    }
 }
 
 trait Player {
@@ -122,19 +185,17 @@ impl Player for RandomPlayer {
 fn main() {
     let values = HashMap::<~str, f64>::new();
     let mut g = Game::new();
-    g.print();
-    println!("----------");
+    let rands: [RandomPlayer, ..2] = [RandomPlayer { ptype: PX },
+                                      RandomPlayer { ptype: PO }];
 
-    let rand1 = RandomPlayer { ptype: PX };
-    let rand2 = RandomPlayer { ptype: PO };
-    rand1.move(&mut g);
-    rand2.move(&mut g);
     g.print();
     println!("----------");
-
-    rand1.move(&mut g);
-    rand2.move(&mut g);
-    g.print();
-    println!("----------");
+    let mut i = 0;
+    while !g.is_over() {
+        rands[i % 2].move(&mut g);
+        g.print();
+        println!("----------");
+        i += 1;
+    }
 
 }
